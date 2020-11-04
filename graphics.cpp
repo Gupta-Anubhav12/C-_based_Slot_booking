@@ -1,13 +1,11 @@
-
 #include <TGUI/TGUI.hpp>
 #include <iostream>
 #include"Patient.h"
 #include"Doctor.h"
 #include "email.h"
-
-
+#include "email_patients.h"
 string otp_mail_wala;
-MYSQL*conn;
+//MYSQL*conn;
 Patient p;
 
 // widgets are declared Globally to avoid confusion while calling in functions
@@ -32,7 +30,8 @@ Patient p;
 
     auto lab_pass           = tgui::Label::create();
     auto lab_otp            = tgui::Label::create();
-
+    auto lab_show           = tgui::Label::create();
+    auto lab_delete         = tgui::Label::create();
 
 
 void register_otp(tgui::EditBox::Ptr username, tgui::EditBox::Ptr password,tgui::EditBox::Ptr password2,tgui::EditBox::Ptr otp)
@@ -64,8 +63,6 @@ void register_otp(tgui::EditBox::Ptr username, tgui::EditBox::Ptr password,tgui:
         password2->setVisible(false);
         btn_otp->setVisible(false);
         editBoxOtp->setVisible(false);
-
-
         }
 
 
@@ -77,8 +74,9 @@ void fun_slot(void){
 
     combo_slots->setVisible(true);
     btn_allot->setVisible(true);
+    string dp = combo_doc->getSelectedItem().toAnsiString();
 
-     p.display_slot(conn,"child_care",combo_day->getSelectedItem().toAnsiString());
+     p.display_slot(conn,dp,combo_day->getSelectedItem().toAnsiString());
     while(!p.stack_slot.empty())
         {
     combo_slots->addItem(p.stack_slot.top());
@@ -90,17 +88,16 @@ void fun_slot(void){
 //finally Book the slot here
 void fun_final(void){
     string s =combo_slots->getSelectedItem().toAnsiString();
-    string dp = "child_care";
+    string dp = combo_doc->getSelectedItem().toAnsiString();
     string dy = combo_day->getSelectedItem().toAnsiString();
     int x = p.book_appointment(conn,s,dp,dy);
     std::cout<<std::endl<<x;
-
-
+    send_patient(p.get());
 
 }
 // function for entering dept and enquiring for days
 void fun_dept(void){
-    p.display(conn,"child_care");
+    p.display(conn, combo_doc->getSelectedItem().toAnsiString());
     while(!p.day.empty())
         {
     combo_day->addItem(p.day.top());
@@ -124,25 +121,29 @@ void fun_book(void){
 
 
 }
-// function for deleting
+// function for showing appointments
 void fun_show(void){
+    lab_show->getText().toAnsiString();
+     string s=p.show_appointment(conn);
 
+    lab_show->setText(s);
+    lab_show->setVisible(true);
     btn_book->setVisible(false);
     btn_show->setVisible(false);
     btn_delete->setVisible(false);
 
-
 }
+// function for deleting
 void fun_delete(void){
-
-
+    p.delete_appointments(conn);
+    lab_delete->setVisible(true);
     btn_book->setVisible(false);
     btn_show->setVisible(false);
     btn_delete->setVisible(false);
 }
 
 //this function validates the password matching and renders the otp textbox this function is also used to trace Email and send OPT
-// Gagan Do take a note of this
+
 
 void register_acc(tgui::EditBox::Ptr username, tgui::EditBox::Ptr password,tgui::EditBox::Ptr password2,tgui::EditBox::Ptr otp)
 {
@@ -184,17 +185,12 @@ void login_acc(tgui::EditBox::Ptr username, tgui::EditBox::Ptr password)
         loginAcc->setVisible(false);
         btn_book->setVisible(true);
         password->setVisible(false);
-
         btn_delete->setVisible(true);
         btn_show->setVisible(true);
     }
     else{
         std::cout<<"try Again";
     }
-
-
-
-
 }
 
 
@@ -391,8 +387,13 @@ void loadWidgets( tgui::Gui& gui )
         //combo box for doctors
         combo_doc->setSize("28%", "6%");
         combo_doc->setPosition("37%","40%");
-        combo_doc->addItem("Item 3");
-        combo_doc->setSelectedItem("Item 3");
+        combo_doc->addItem("Select Department");
+        combo_doc->addItem("child_care");
+        combo_doc->addItem("Cardiologist");
+        combo_doc->addItem("Dermatologist");
+        combo_doc->addItem("Neurologist");
+        combo_doc->addItem("Orthopedic");
+        combo_doc->setSelectedItem("Select Department");
         combo_doc->setVisible(false);
         gui.add(combo_doc);
 
@@ -422,6 +423,18 @@ void loadWidgets( tgui::Gui& gui )
         lab_otp->setVisible(false);
         gui.add(lab_otp);
 
+        // for showing appointment
+        lab_show->setPosition("36%","44%");
+        lab_show->setTextSize(22);
+        lab_show->setVisible(false);
+        gui.add(lab_show);
+
+        //label for delete query
+        lab_delete->setText("Appointments Deleted");
+        lab_delete->setPosition("36%","44%");
+        lab_delete->setTextSize(22);
+        lab_delete->setVisible(false);
+        gui.add(lab_delete);
 }
 
 int main()

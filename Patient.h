@@ -19,7 +19,10 @@ class Patient
     string id;
     string name;
     int age;
-public:
+    public:
+    string get(){
+    return id;
+    }
     stack<string> day;
     stack<string>stack_slot;
     map<string,string> arr[3];
@@ -29,6 +32,8 @@ public:
     void display(MYSQL*conn,string);
     void display_slot(MYSQL*conn,string,string);
     int book_appointment(MYSQL*conn,string,string,string);
+    string show_appointment(MYSQL*conn);
+    void delete_appointments(MYSQL*conn);
 };
 
 int Patient ::login(MYSQL*conn,string email,string pass)
@@ -39,7 +44,9 @@ int Patient ::login(MYSQL*conn,string email,string pass)
 
 
     stringstream s;
-    s<<"select * from login where (email,password,user)=("<<"'"<<email<<"','"<<pass<<"',0"<<");";
+    s<<"select * from patients where (email,pass)=("<<"'"<<email<<"','"<<pass<<"'"<<");";
+    cout<<endl<<endl<<mysql_error(conn)<<endl;
+    cout<<s.str()<<endl;
     string qs=s.str();
     int qstate=mysql_query(conn,qs.c_str());
     if(qstate==0)
@@ -55,10 +62,7 @@ int Patient ::login(MYSQL*conn,string email,string pass)
             return 1 ;
         }
         if(i==0)
-            return 0;
-
-
-    }
+            return 0;}
     else
     {
         return 0;
@@ -232,6 +236,63 @@ int Patient::book_appointment(MYSQL*conn,string Slot,string dep,string Day)
                     string q=s.str();
                     int state=mysql_query(conn,q.c_str());
                     return state;
+
+}
+
+string Patient::show_appointment(MYSQL*conn)
+{
+     system("cls");
+    cout<<setw(62)<<setfill('_')<<" "<<setfill(' ')<<"YOUR APPOINTMENTS";
+    cout<<setw(50)<<setfill('_')<<" "<<setfill(' ')<<endl;
+    stringstream final;//string will be returned from this stream
+     MYSQL_ROW row;
+    MYSQL_RES* result;
+    int i=0;
+    //this loop is going to check for all the five slots
+    for(int i=1;i<=5;i++)
+    {
+        stringstream s;
+        s<<"select * from Booking where Slot"<<i<<"='"<<id<<"';";
+        string str=s.str();
+
+        int qstate=mysql_query(conn,str.c_str());
+        if(qstate!=0)
+        {
+            cout<<"Error\n";
+            exit(0);
+        }
+        result=mysql_store_result(conn);
+        while(row=mysql_fetch_row(result))
+        {
+            //stream which will have:department,slot and day as bookings...
+            stringstream temp,slotname;
+            slotname<<"SLOT"<<i;
+            temp<<setw(15)<<left<<row[1]<<setw(8)<<slotname.str()<<"   "<<row[7];
+            //push this string  into stack
+            final<<temp.str()<<"\n";
+            i++;
+
+        }
+
+    }
+    if(i==0)return string("No Appointments");
+    return final.str();
+}
+
+void Patient::delete_appointments(MYSQL*conn)
+{
+     MYSQL_ROW row;
+    MYSQL_RES* result;
+
+    //traversing through each slot
+    for(int i=1;i<=5;i++)
+    {
+        stringstream s;
+        s<<"Update Booking set Slot"<<i<<"='None' where Slot"<<i<<"='"<<id<<"';";
+        string str=s.str();
+        int qstate=mysql_query(conn,str.c_str());
+        result=mysql_store_result(conn);
+    }
 
 }
 

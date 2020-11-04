@@ -1,7 +1,3 @@
-
-#ifndef EMAIL_H_INCLUDED
-#define EMAIL_H_INCLUDED
-
 #include <iostream>
 #include <fstream>
 #include<experimental/filesystem>
@@ -9,16 +5,39 @@
 #include<string>
 #include<sstream>
 #include<time.h>
+#include<winsock.h>
+#include"mysql.h"
 
 using namespace std;
+MYSQL* conn;
+string send_patient(string reciever){
 
-int send_otp(string reciever){
+    MYSQL_ROW row;
+    MYSQL_RES* result;
+    stringstream temp;
+    //this loop is going to check for all the five slots
+    for(int i=1;i<=5;i++)
+    {
+        stringstream s;
+        s<<"select * from Booking where Slot"<<i<<"='"<<reciever<<"';";
+        string str=s.str();
 
-    //============================Generating a random number===========================//
-    srand(time(0));
-    int otp = rand()%9999+10000;
-    //cout<<otp;
-    string code = to_string(otp);
+        int qstate=mysql_query(conn,str.c_str());
+        if(qstate!=0)
+        {
+            cout<<"Error\n";
+            exit(0);
+        }
+        result=mysql_store_result(conn);
+        while(row=mysql_fetch_row(result))
+        {
+            //stream which will have:department,slot and day as bookings...
+            //stringstream temp;
+            temp<<row[1]<<" "<<"SLOT"<<i<<" "<<row[7];
+            //return temp.str();
+        }}
+
+    string code = temp.str();
     //================================random number generated and sent to string ===========//
     char cwd[10000];//this finds the path of .cpp file (absolute)
     getcwd(cwd, sizeof(cwd));
@@ -48,7 +67,7 @@ int send_otp(string reciever){
   "msg['To'] = '"+reciever+"'\n"
   "smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)\n"
   "smtp.login('environmentseekersnitj@gmail.com', 'fdgphlhigarggaoy')\n"
-  "msg.set_content('Your OTP for verification of booking is given as :: "+code+"')\n"
+  "msg.set_content('You are booked :: "+code+"')\n"
   "smtp.send_message(msg)\n"
   "smtp.quit()";
 
@@ -65,10 +84,23 @@ int send_otp(string reciever){
     command += filename;
     system(command.c_str()); // sending a command in python for execution
     cout<<"mail_sent";
-    return otp;
-
+    return code;
 
 }
 
 
-#endif // PATIENT_H_INCLUDED
+int main() {
+    conn  = mysql_init(0);//connecting to database
+    conn =mysql_real_connect(conn,"remotemysql.com", "izbe2a6Gri","9MnXblPN0F","izbe2a6Gri",3306,NULL,0);
+
+    if(conn==0)
+    {
+        cout<<"Error\n";
+        mysql_close(conn);
+        exit(0);
+    }
+    string x = send_patient("FallakBansal@gmail.com");
+    cout<<endl<<"value of x is "<<x;
+    return 0;
+
+}
