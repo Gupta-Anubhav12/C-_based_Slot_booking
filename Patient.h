@@ -274,7 +274,7 @@ string Patient::show_appointment(MYSQL*conn)
     stringstream final;//string will be returned from this stream
      MYSQL_ROW row;
     MYSQL_RES* result;
-    int i=0;
+    int k=0;
     //this loop is going to check for all the five slots
     for(int i=1;i<=5;i++)
     {
@@ -297,12 +297,12 @@ string Patient::show_appointment(MYSQL*conn)
             temp<<setw(15)<<left<<row[1]<<setw(8)<<slotname.str()<<"   "<<row[7];
             //push this string  into stack
             final<<temp.str()<<"\n";
-            i++;
+            k++;
 
         }
 
     }
-    if(i==0)return string("No Appointments");
+    if(k==0)return string("No Appointments");
     return final.str();
 }
 
