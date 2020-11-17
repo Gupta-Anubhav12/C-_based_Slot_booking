@@ -26,7 +26,35 @@ public:
     return id;}
     string getdept(){
     return dept;}
+    void reset(MYSQL*conn);
+
 };
+
+void Doctor::reset(MYSQL*conn)
+{
+    MYSQL_RES*res;
+    MYSQL_ROW row;
+    //run this loop for all slots from 1 to 5
+    for(int i=1;i<=5;i++)
+    {
+        stringstream s;
+        s<<"update Booking set Slot"<<i<<"='None';";
+        string str=s.str();
+        int qstate=mysql_query(conn,str.c_str());
+        if(qstate!=0)
+        {
+
+            mysql_close(conn);
+            exit(0);
+        }
+        res=mysql_store_result(conn);
+    }
+
+}
+
+
+
+
 
 int Doctor::login(MYSQL*conn,string email,string pass)
 {

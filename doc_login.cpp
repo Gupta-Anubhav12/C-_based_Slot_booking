@@ -14,6 +14,14 @@ auto print           = tgui::Button::create("Print");
 
 void delete_slots()
 {
+    d.reset(conn);
+    chatbox->setVisible(true);
+    Delete_all->setVisible(true);
+    print->setVisible(true);
+
+    chatbox->removeAllLines();
+    chatbox->addLine("\t\t\t Your Appointments are \t", sf::Color::Black);
+    chatbox->addLine(d.display_appointments(conn), sf::Color::Red);
 
 }
 void print_app()

@@ -19,6 +19,8 @@ Patient p;
     auto editBoxUsername    = tgui::EditBox::create();
     auto editBoxOtp         = tgui::EditBox::create();
     auto editBoxAge         = tgui::EditBox::create();
+    auto editBoxPassword2   = tgui::EditBox::copy(editBoxUsername);
+    auto editBoxPassword    = tgui::EditBox::copy(editBoxUsername);
     auto createAcc          = tgui::Button::create("Create Account");
     auto btn_login          = tgui::Button::create("Already Have Account");
     auto btn_register       = tgui::Button::create("Register");
@@ -32,6 +34,33 @@ Patient p;
     auto lab_otp            = tgui::Label::create();
     auto lab_show           = tgui::Label::create();
     auto lab_delete         = tgui::Label::create();
+    auto lab_success        = tgui::Label::create();
+
+
+
+void login_acc(tgui::EditBox::Ptr username, tgui::EditBox::Ptr password)
+{
+    std::cout<<"aa rha ethe takk :: agge vi jaauga ";
+    std::cout << "Username: " << username->getText().toAnsiString() << std::endl;
+    std::cout << "Password: " << password->getText().toAnsiString() << std::endl;
+
+    int res = p.login(conn,username->getText().toAnsiString(),password->getText().toAnsiString());
+    std::cout<<res;
+    if(res==1){
+        editBoxUsername->setVisible(false);
+        loginAcc->setVisible(false);
+        btn_book->setVisible(true);
+        password->setVisible(false);
+        btn_delete->setVisible(true);
+        btn_show->setVisible(true);
+    }
+    else{
+        std::cout<<"try Again";
+    }
+}
+
+
+
 
 
 void register_otp(tgui::EditBox::Ptr username, tgui::EditBox::Ptr password,tgui::EditBox::Ptr password2,tgui::EditBox::Ptr otp)
@@ -91,8 +120,18 @@ void fun_final(void){
     string dp = combo_doc->getSelectedItem().toAnsiString();
     string dy = combo_day->getSelectedItem().toAnsiString();
     int x = p.book_appointment(conn,s,dp,dy);
+    combo_day->setVisible(false);
+    combo_doc->setVisible(false);
+    combo_slots->setVisible(false);
+    btn_allot->setVisible(false);
+    btn_dayDoc->setVisible(false);
+    btn_dept->setVisible(false);
+
+    lab_success->setVisible(true);
+
     std::cout<<std::endl<<x;
     send_patient(p.get());
+
 
 }
 // function for entering dept and enquiring for days
@@ -152,17 +191,38 @@ void register_acc(tgui::EditBox::Ptr username, tgui::EditBox::Ptr password,tgui:
     std::cout << "Password2: " << password2->getText().toAnsiString() << std::endl;
     std::cout << "Gender: " << combo_gender->getSelectedItem().toAnsiString()<< std::endl;
     std::cout << "Age: " << editBoxAge->getText().toAnsiString()<< std::endl;
-    if( password->getText().toAnsiString() == password2->getText().toAnsiString() ){
-        otp->setVisible(true);
-        btn_otp->setVisible(true);
-        btn_register->setVisible(false);
-        int pin = send_otp(editBoxUsername->getText().toAnsiString());
 
 
-        stringstream ss;
-        ss << pin;
-        otp_mail_wala = ss.str();
 
+    if( password->getText().toAnsiString() == password2->getText().toAnsiString())
+    {
+
+        int state = p.reg(conn,editBoxUsername->getText().toAnsiString());
+        if(state == 1)
+        {
+            otp->setVisible(true);
+            btn_otp->setVisible(true);
+            btn_register->setVisible(false);
+
+            int pin = send_otp(editBoxUsername->getText().toAnsiString());
+
+
+            stringstream ss;
+            ss << pin;
+            otp_mail_wala = ss.str();
+
+    }
+        else
+        {
+            editBoxAge->setVisible(false);
+            btn_register->setVisible(false);
+            editBoxPassword2->setVisible(false);
+            combo_gender->setVisible(false);
+            loginAcc->setVisible(true);
+            login_acc(editBoxUsername,editBoxPassword);
+
+
+        }
     }
     else{
         lab_pass->setVisible(true);
@@ -172,26 +232,6 @@ void register_acc(tgui::EditBox::Ptr username, tgui::EditBox::Ptr password,tgui:
 }
 
 
-void login_acc(tgui::EditBox::Ptr username, tgui::EditBox::Ptr password)
-{
-    std::cout<<"aa rha ethe takk :: agge vi jaauga ";
-    std::cout << "Username: " << username->getText().toAnsiString() << std::endl;
-    std::cout << "Password: " << password->getText().toAnsiString() << std::endl;
-    //Gagan will add validation from database here to register the user and store his/her data in variables
-    int res = p.login(conn,username->getText().toAnsiString(),password->getText().toAnsiString());
-    std::cout<<res;
-    if(res==1){
-        editBoxUsername->setVisible(false);
-        loginAcc->setVisible(false);
-        btn_book->setVisible(true);
-        password->setVisible(false);
-        btn_delete->setVisible(true);
-        btn_show->setVisible(true);
-    }
-    else{
-        std::cout<<"try Again";
-    }
-}
 
 
 void loadWidgets( tgui::Gui& gui )
@@ -218,16 +258,18 @@ void loadWidgets( tgui::Gui& gui )
 
     // Create the password edit box
     // We copy the previous edit box here and keep the same size
-    auto editBoxPassword = tgui::EditBox::copy(editBoxUsername);
+    editBoxPassword->setSize({"40%", "6%"});
     editBoxPassword->setPosition({"29%", "26%"});
     editBoxPassword->setPasswordCharacter('*');
     editBoxPassword->setDefaultText("Password");
+    editBoxPassword->setVisible(false);
     gui.add(editBoxPassword);
 
-    auto editBoxPassword2 = tgui::EditBox::copy(editBoxUsername);
+    editBoxPassword2->setSize({"40%", "6%"});
     editBoxPassword2->setPosition({"29%", "34%"});
     editBoxPassword2->setPasswordCharacter('*');
     editBoxPassword2->setDefaultText("Confirm  Password");
+    editBoxPassword2->setVisible(false);
     gui.add(editBoxPassword2);
 
 
@@ -257,7 +299,7 @@ void loadWidgets( tgui::Gui& gui )
     gui.add(btn_register);
     btn_register->connect("pressed", register_acc, editBoxUsername, editBoxPassword,editBoxPassword2,editBoxOtp);
 
-    //bUTTON TO LOGIN INTO
+    //BUTTON TO LOGIN INTO
     loginAcc->setSize({"50%", "16.67%"});
     loginAcc->setPosition({"25%", "70%"});
     loginAcc->setVisible(false);
@@ -295,16 +337,12 @@ void loadWidgets( tgui::Gui& gui )
     gui.add(btn_show);
     btn_show->connect("pressed",fun_show);
 
-
-
-
     //for final allotment of slot
     btn_allot->setSize({"28%", "6%"});
     btn_allot->setPosition({"67%", "56%"});
     btn_allot->setVisible(false);
     gui.add(btn_allot);
     btn_allot->connect("pressed",fun_final);
-
 
 
     //Button for selecting available slots
@@ -322,11 +360,6 @@ void loadWidgets( tgui::Gui& gui )
     btn_dept->setVisible(false);
     gui.add(btn_dept);
     btn_dept->connect("pressed",fun_dept);
-
-
-
-
-
 
 
     // Button to make choice for Login/Register goes here
@@ -358,13 +391,7 @@ void loadWidgets( tgui::Gui& gui )
                                         btn_login->setVisible(false);
                                          });
 
-
-
-
     // Call the login function when the button is pressed and pass the edit boxes that we created as parameters
-
-
-
     //drop down for gender selection in Register part
 
         combo_gender->setSize("26%","6%");
@@ -378,7 +405,8 @@ void loadWidgets( tgui::Gui& gui )
 
         // Combo Box for selecting Day of Week
         combo_day->setSize("28%", "6%");
-        combo_day->setPosition("7%","32%");
+
+        combo_day->setPosition("37%","40%");
         combo_day->addItem("Select_day");
         combo_day->setSelectedItem("Select_day");
         combo_day->setVisible(false);
@@ -386,7 +414,7 @@ void loadWidgets( tgui::Gui& gui )
 
         //combo box for doctors
         combo_doc->setSize("28%", "6%");
-        combo_doc->setPosition("37%","40%");
+        combo_doc->setPosition("7%","32%");
         combo_doc->addItem("Select Department");
         combo_doc->addItem("child_care");
         combo_doc->addItem("Cardiologist");
@@ -405,10 +433,7 @@ void loadWidgets( tgui::Gui& gui )
         combo_slots->setVisible(false);
         gui.add(combo_slots);
 
-
-
         //Label for showing that passwords don't match
-
 
         lab_pass->setText("Passwords Don't Match");
         lab_pass->setPosition("36%","44%");
@@ -435,6 +460,12 @@ void loadWidgets( tgui::Gui& gui )
         lab_delete->setTextSize(22);
         lab_delete->setVisible(false);
         gui.add(lab_delete);
+
+        lab_success->setText("Registeration Sucessful \n Kindly be on Time");
+        lab_success->setPosition("36%","44%");
+        lab_success->setTextSize(22);
+        lab_success->setVisible(false);
+        gui.add(lab_success);
 }
 
 int main()

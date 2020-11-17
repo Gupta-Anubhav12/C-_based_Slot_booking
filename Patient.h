@@ -34,14 +34,13 @@ class Patient
     int book_appointment(MYSQL*conn,string,string,string);
     string show_appointment(MYSQL*conn);
     void delete_appointments(MYSQL*conn);
+    int reg(MYSQL*conn,string);
 };
 
 int Patient ::login(MYSQL*conn,string email,string pass)
 {
     MYSQL_ROW row;
     MYSQL_RES* res;
-
-
 
     stringstream s;
     s<<"select * from patients where (email,pass)=("<<"'"<<email<<"','"<<pass<<"'"<<");";
@@ -70,14 +69,43 @@ int Patient ::login(MYSQL*conn,string email,string pass)
 
 }
 
+int Patient :: reg(MYSQL*conn,string email)
+{
+    MYSQL_ROW row;
+    MYSQL_RES* res;
+    stringstream s1;
+    s1<<"select * from patients where email='"<<email<<"';";
+
+        string qs=s1.str();
+    int qstate=mysql_query(conn,qs.c_str());
+    if(qstate==0)
+    {
+        res=mysql_store_result(conn);
+        int i=0;
+        while(row=mysql_fetch_row(res))
+            i++;
+
+        if(i!=0)
+        {
+            cout<<setw(62)<<" "<<"Email address already exists\n";
+            cout<<setw(62)<<" "<<"Please Login:\n";
+
+            return 302;
+        }
+        else return 1;
+    }
+
+}
+
+
+
 int Patient::reg(MYSQL*conn,string email,string pass,string age,string gender)
 {
     MYSQL_ROW row;
     MYSQL_RES* res;
 
-
     stringstream s1;
-    s1<<"select * from login where email='"<<email<<"';";
+    s1<<"select * from patients where email='"<<email<<"';";
 
     string qs=s1.str();
     int qstate=mysql_query(conn,qs.c_str());
@@ -92,8 +120,7 @@ int Patient::reg(MYSQL*conn,string email,string pass,string age,string gender)
         {
             cout<<setw(62)<<" "<<"Email address already exists\n";
             cout<<setw(62)<<" "<<"Please Login:\n";
-
-            return 0;
+            exit(0);//display label of email already exists..
         }
     }
     int role=0;//for patient

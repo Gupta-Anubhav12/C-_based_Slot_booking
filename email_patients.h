@@ -12,7 +12,7 @@
 
 using namespace std;
 
-MYSQL* conn;
+//MYSQL* conn;
 string send_patient(string reciever){
 
     MYSQL_ROW row;
